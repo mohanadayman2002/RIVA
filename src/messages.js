@@ -8,8 +8,9 @@ export const COPY = {
     photoCount: '{n} photos received.',
     needPhotos: 'Please send at least one photo first 📸',
     keepSending: 'Keep sending photos 📸 — tap *Done* when you have finished.',
+    moreText: 'Got it ✍️ Send more text if you want — tap *Done* when you have finished.',
     askText:
-      '✅ {n} photo(s) received.\n\n📝 *Step 2* — now send the details in one message: price, size, bedrooms, bathrooms, location, finishing, payment plan… anything you want on the presentation.',
+      '✅ {n} photo(s) received.\n\n📝 *Step 2* — now send the details. Send as many messages as you like, then tap *Done*.',
     askFloorplan: 'Do you want to add a floor plan?',
     floorplanPrompt: '📐 Send the floor plan image(s). Tap *Done* when finished.',
     floorplanCount: '{n} floor plan(s) received.',
@@ -22,6 +23,7 @@ export const COPY = {
     limitReached: 'That is the maximum of {n} photos. Tap *Done* to continue.',
     buttons: {
       donePhotos: '✅ Done',
+      doneText: '✅ Done',
       yes: 'Yes',
       no: 'No',
       donePlans: '✅ Done',
@@ -36,8 +38,9 @@ export const COPY = {
     photoCount: 'تم استلام {n} صورة.',
     needPhotos: 'من فضلك ابعت صورة واحدة على الأقل أولاً 📸',
     keepSending: 'كمّل إرسال الصور 📸 — واضغط *تم* لما تخلّص.',
+    moreText: 'تمام ✍️ ابعت نص تاني لو عايز — واضغط *تم* لما تخلّص.',
     askText:
-      '✅ تم استلام {n} صورة.\n\n📝 *الخطوة ٢* — ابعت التفاصيل في رسالة واحدة: السعر، المساحة، عدد الغرف، الحمامات، الموقع، التشطيب، نظام السداد… أي حاجة عايزها في العرض.',
+      '✅ تم استلام {n} صورة.\n\n📝 *الخطوة ٢* — ابعت التفاصيل. تقدر تبعت أكتر من رسالة، وبعدين اضغط *تم*.',
     askFloorplan: 'تحب تضيف مخطط للوحدة؟',
     floorplanPrompt: '📐 ابعت صورة المخطط. اضغط *تم* لما تخلّص.',
     floorplanCount: 'تم استلام {n} مخطط.',
@@ -50,6 +53,7 @@ export const COPY = {
     limitReached: 'وصلت للحد الأقصى {n} صورة. اضغط *تم* للمتابعة.',
     buttons: {
       donePhotos: '✅ تم',
+      doneText: '✅ تم',
       yes: 'نعم',
       no: 'لا',
       donePlans: '✅ تم',

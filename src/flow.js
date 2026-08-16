@@ -31,6 +31,7 @@ const STEP = {
 
 const ACTION = {
   DONE_PHOTOS: 'done_photos',
+  DONE_TEXT: 'done_text',
   PLANS_YES: 'plans_yes',
   PLANS_NO: 'plans_no',
   DONE_PLANS: 'done_plans',
@@ -38,32 +39,11 @@ const ACTION = {
 };
 
 const RESTART_RE = /^(new|restart|reset|start over|start|\/new|جديد|عرض جديد|ابدأ|إعادة|من الأول)$/i;
-const DONE_RE = /^(done|finish|finished|ok|okay|next|تم|خلاص|انتهيت|كفاية)$/i;
+
+// Text is never inspected for content. The only strings with meaning are the
+// answers to the floor-plan question, and only at that step.
 const YES_RE = /^(y|yes|yep|sure|ok|نعم|أيوة|ايوه|اه|آه|تمام)$/i;
 const NO_RE = /^(n|no|nope|skip|لا|لأ|مش دلوقتي|تخطي)$/i;
-// \b is ASCII-only in JavaScript, so an Arabic alternative followed by \b can
-// never match. A unicode-aware lookahead works for both scripts.
-const GREETING_RE =
-  /^(hi+|hello|hey|yo|good (morning|evening|afternoon)|thanks|thank you|ty|ok|okay|salam|السلام عليكم|وعليكم السلام|اهلا|أهلا|مرحبا|هاي|صباح الخير|مساء الخير|شكرا|شكراً|تمام)(?![\p{L}\p{N}])[\s!.,؟?]*$/iu;
-
-/** A bare "hi" / "شكرا" and nothing else. */
-function isGreeting(text) {
-  const value = String(text).trim();
-  return !value || GREETING_RE.test(value);
-}
-
-/**
- * Used only while photos are still arriving, where a stray "ok" must not be
- * mistaken for the listing. Details are long, multi-line, or contain a number.
- *
- * Once the agent has actually been asked for the details, this test is wrong —
- * "hello palm hills hello" is a real listing and was being bounced by it.
- */
-function looksLikeDetails(text) {
-  const value = String(text).trim();
-  if (isGreeting(value)) return false;
-  return value.length >= 25 || value.includes('\n') || /\d/.test(value);
-}
 
 // per-user serialization + photo-batch debounce (in-memory, rebuilt on restart)
 const queues = new Map();
@@ -87,12 +67,12 @@ function clearBatchTimer(waId) {
   }
 }
 
-function scheduleBatchTimer(waId) {
+function scheduleBatchTimer(waId, ms = config.batchIdleMs) {
   clearBatchTimer(waId);
   const timer = setTimeout(() => {
     timers.delete(waId);
     enqueue(waId, () => onBatchIdle(waId));
-  }, config.batchIdleMs);
+  }, ms);
   timer.unref?.();
   timers.set(waId, timer);
 }
@@ -103,6 +83,8 @@ async function onBatchIdle(waId) {
 
   if (session.step === STEP.AWAITING_IMAGES && session.images.length > 0) {
     await promptForText(session);
+  } else if (session.step === STEP.AWAITING_TEXT && session.text.trim()) {
+    await promptForFloorplan(session);
   } else if (session.step === STEP.AWAITING_FLOORPLANS && session.floorplans.length > 0) {
     await generate(session);
   }
@@ -297,24 +279,33 @@ async function handleAwaitingImages(session, msg) {
     if (!session.images.length) {
       return sendText(session.id, t(session.lang, 'needPhotos'), { preview: false });
     }
-    if (DONE_RE.test(msg.text)) {
-      clearBatchTimer(session.id);
-      return promptForText(session);
-    }
-    if (!looksLikeDetails(msg.text)) {
-      // Small talk mid-upload — don't mistake it for the listing.
-      return sendButtons(session.id, t(session.lang, 'keepSending'), [
-        { id: ACTION.DONE_PHOTOS, title: t(session.lang, 'buttons.donePhotos') },
-      ]);
-    }
-    // Agent skipped ahead and sent the details already — take them.
+    // Any text ends the photo batch and starts collecting the listing. The text
+    // itself is never examined — whatever it is, it is kept.
     clearBatchTimer(session.id);
-    session.text = msg.text;
-    await saveSession(session);
-    return promptForFloorplan(session);
+    session.step = STEP.AWAITING_TEXT;
+    return collectText(session, msg.text);
   }
 
   return sendText(session.id, t(session.lang, 'unsupported'), { preview: false });
+}
+
+/**
+ * Text is gathered exactly like photos: every message is appended, and the
+ * agent says when they are finished. Nothing is parsed, judged or discarded —
+ * a single letter is as valid as a full listing.
+ */
+async function collectText(session, text) {
+  const first = !session.text.trim();
+  session.text = first ? text : `${session.text}\n${text}`;
+  await saveSession(session);
+
+  scheduleBatchTimer(session.id, config.textIdleMs);
+
+  if (first) {
+    await sendButtons(session.id, t(session.lang, 'moreText'), [
+      { id: ACTION.DONE_TEXT, title: t(session.lang, 'buttons.doneText') },
+    ]);
+  }
 }
 
 async function handleAwaitingText(session, msg) {
@@ -323,16 +314,19 @@ async function handleAwaitingText(session, msg) {
     return handleImage(session, { ...msg });
   }
 
-  // A second tap on the "Done" button from the previous step. The prompt has
-  // already been sent, so repeating it just spams the chat.
-  if (msg.kind === 'action') return undefined;
+  if (msg.kind === 'action') {
+    if (msg.actionId === ACTION.DONE_TEXT) {
+      clearBatchTimer(session.id);
+      if (!session.text.trim()) {
+        return sendText(session.id, t(session.lang, 'askText', { n: session.images.length }), { preview: false });
+      }
+      return promptForFloorplan(session);
+    }
+    return undefined; // stale tap from an earlier step
+  }
 
-  // The agent was asked for the details, so take whatever they send — the only
-  // thing turned away is a bare greeting.
-  if (msg.kind === 'text' && msg.text && !isGreeting(msg.text)) {
-    session.text = msg.text;
-    await saveSession(session);
-    return promptForFloorplan(session);
+  if (msg.kind === 'text' && msg.text) {
+    return collectText(session, msg.text);
   }
 
   return sendText(session.id, t(session.lang, 'askText', { n: session.images.length }), { preview: false });
@@ -387,7 +381,7 @@ async function handleAwaitingFloorplans(session, msg) {
     return generate(session);
   }
 
-  if (msg.kind === 'text' && (DONE_RE.test(msg.text) || NO_RE.test(msg.text))) {
+  if (msg.kind === 'text' && NO_RE.test(msg.text)) {
     return generate(session);
   }
 

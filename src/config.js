@@ -48,6 +48,9 @@ export const config = {
   // Browser chat simulator at /sim — set SIMULATOR=off in production
   simulator: process.env.SIMULATOR !== 'off',
 
+  // People type slower than they attach photos, so the text step waits longer
+  textIdleMs: Number(process.env.TEXT_IDLE_MS || 45000),
+
   // How long to wait after the last photo before assuming the user is done (ms)
   batchIdleMs: Number(process.env.BATCH_IDLE_MS || 8000),
 
