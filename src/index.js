@@ -4,9 +4,12 @@ import { flushNow, describeBackend } from './store.js';
 
 const app = createServer();
 
-const server = app.listen(config.port, () => {
+// Hosts inject PORT and probe the container from outside, so bind every
+// interface rather than just loopback — a container listening on 127.0.0.1
+// fails its health check and gets SIGTERMed.
+const server = app.listen(config.port, '0.0.0.0', () => {
   console.log(`\n  ${config.brand.name} — WhatsApp presentation bot`);
-  console.log(`  listening on http://localhost:${config.port}`);
+  console.log(`  listening on 0.0.0.0:${config.port} (PORT env: ${process.env.PORT ?? 'unset, defaulted'})`);
   console.log(`  public base url: ${config.baseUrl}`);
   console.log(`  webhook:         ${config.baseUrl}/webhook`);
   console.log(`  storage:         ${describeBackend()}`);
@@ -21,8 +24,13 @@ const server = app.listen(config.port, () => {
   }
 });
 
+let shuttingDown = false;
+
 async function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
   console.log(`\n[${signal}] shutting down…`);
+
   server.close();
   try {
     await flushNow();
@@ -31,6 +39,11 @@ async function shutdown(signal) {
   }
   process.exit(0);
 }
+
+process.on('uncaughtException', (err) => {
+  console.error('[uncaughtException]', err);
+  process.exit(1);
+});
 
 process.on('SIGINT', () => shutdown('SIGINT'));
 process.on('SIGTERM', () => shutdown('SIGTERM'));

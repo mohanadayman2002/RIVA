@@ -13,14 +13,12 @@
     "tunnel": "cloudflared tunnel --url http://localhost:3000"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.68.0",
     "@supabase/supabase-js": "^2.112.3",
     "dotenv": "^17.2.3",
     "exceljs": "^4.4.0",
-    "express": "^5.1.0",
-    "puppeteer": "^25.6.0"
+    "express": "^5.1.0"
   }
 }

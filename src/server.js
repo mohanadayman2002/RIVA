@@ -38,6 +38,9 @@ function verifySignature(req) {
 export function createServer() {
   const app = express();
   app.disable('x-powered-by');
+  // Deployed behind a platform proxy (Railway, Render, Fly, Coolify…), so trust
+  // the forwarding headers for client ip and protocol.
+  app.set('trust proxy', true);
 
   // ---------------------------------------------------------------- webhook
   app.get('/webhook', (req, res) => {
@@ -132,18 +135,26 @@ export function createServer() {
   });
 
   // ---------------------------------------------------------------- ops
-  app.get('/healthz', async (_req, res) => {
+  // Liveness: answers 200 as long as the process is up, and touches nothing
+  // external. A health check that queries the database gets the container
+  // killed whenever the database hiccups or its credentials are missing.
+  app.get('/healthz', (_req, res) => {
+    res.json({
+      ok: true,
+      whatsapp: assertWhatsAppConfig().length === 0,
+      storage: describeBackend(),
+      baseUrl: config.baseUrl,
+    });
+  });
+
+  // Readiness: actually exercises the store, for when you want to know whether
+  // the backend is reachable. Never point a platform health check at this.
+  app.get('/readyz', async (_req, res) => {
     try {
       const all = await listPresentations(1000);
-      res.json({
-        ok: true,
-        whatsapp: assertWhatsAppConfig().length === 0,
-        storage: describeBackend(),
-        presentations: all.length,
-        baseUrl: config.baseUrl,
-      });
+      res.json({ ok: true, storage: describeBackend(), presentations: all.length });
     } catch (err) {
-      res.status(500).json({ ok: false, storage: describeBackend(), error: err.message });
+      res.status(503).json({ ok: false, storage: describeBackend(), error: err.message });
     }
   });
 
