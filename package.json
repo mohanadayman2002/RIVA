@@ -1,0 +1,26 @@
+{
+  "name": "riva-whatsapp-presentation-bot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "WhatsApp bot that turns real-estate photos + text into a shareable presentation link",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "demo": "node scripts/demo.js",
+    "check:whatsapp": "node scripts/check-whatsapp.js",
+    "tunnel": "cloudflared tunnel --url http://localhost:3000"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.68.0",
+    "@supabase/supabase-js": "^2.112.3",
+    "dotenv": "^17.2.3",
+    "exceljs": "^4.4.0",
+    "express": "^5.1.0",
+    "puppeteer": "^25.6.0"
+  }
+}
