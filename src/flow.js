@@ -41,16 +41,27 @@ const RESTART_RE = /^(new|restart|reset|start over|start|\/new|جديد|عرض �
 const DONE_RE = /^(done|finish|finished|ok|okay|next|تم|خلاص|انتهيت|كفاية)$/i;
 const YES_RE = /^(y|yes|yep|sure|ok|نعم|أيوة|ايوه|اه|آه|تمام)$/i;
 const NO_RE = /^(n|no|nope|skip|لا|لأ|مش دلوقتي|تخطي)$/i;
+// \b is ASCII-only in JavaScript, so an Arabic alternative followed by \b can
+// never match. A unicode-aware lookahead works for both scripts.
 const GREETING_RE =
-  /^(hi|hello|hey|yo|hii+|good (morning|evening|afternoon)|thanks|thank you|ty|salam|السلام عليكم|وعليكم السلام|اهلا|أهلا|مرحبا|هاي|صباح الخير|مساء الخير|شكرا|شكراً)\b[\s!.,؟?]*$/i;
+  /^(hi+|hello|hey|yo|good (morning|evening|afternoon)|thanks|thank you|ty|ok|okay|salam|السلام عليكم|وعليكم السلام|اهلا|أهلا|مرحبا|هاي|صباح الخير|مساء الخير|شكرا|شكراً|تمام)(?![\p{L}\p{N}])[\s!.,؟?]*$/iu;
+
+/** A bare "hi" / "شكرا" and nothing else. */
+function isGreeting(text) {
+  const value = String(text).trim();
+  return !value || GREETING_RE.test(value);
+}
 
 /**
- * Guards against a greeting being captured as the listing text. Details are
- * either long, multi-line, or contain a number (price, size, room count).
+ * Used only while photos are still arriving, where a stray "ok" must not be
+ * mistaken for the listing. Details are long, multi-line, or contain a number.
+ *
+ * Once the agent has actually been asked for the details, this test is wrong —
+ * "hello palm hills hello" is a real listing and was being bounced by it.
  */
 function looksLikeDetails(text) {
   const value = String(text).trim();
-  if (!value || GREETING_RE.test(value)) return false;
+  if (isGreeting(value)) return false;
   return value.length >= 25 || value.includes('\n') || /\d/.test(value);
 }
 
@@ -312,7 +323,13 @@ async function handleAwaitingText(session, msg) {
     return handleImage(session, { ...msg });
   }
 
-  if (msg.kind === 'text' && msg.text && looksLikeDetails(msg.text)) {
+  // A second tap on the "Done" button from the previous step. The prompt has
+  // already been sent, so repeating it just spams the chat.
+  if (msg.kind === 'action') return undefined;
+
+  // The agent was asked for the details, so take whatever they send — the only
+  // thing turned away is a bare greeting.
+  if (msg.kind === 'text' && msg.text && !isGreeting(msg.text)) {
     session.text = msg.text;
     await saveSession(session);
     return promptForFloorplan(session);
