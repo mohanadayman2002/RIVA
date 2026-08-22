@@ -43,6 +43,9 @@ export const config = {
     tagline: process.env.BRAND_TAGLINE || '',
     agent: process.env.BRAND_AGENT || '',
     phone: process.env.BRAND_PHONE || '',
+    // shown in the corners of every presentation
+    markLeft: process.env.BRAND_MARK_LEFT ?? 'REVA',
+    markRight: process.env.BRAND_MARK_RIGHT ?? 'CG',
   },
 
   // Browser chat simulator at /sim — set SIMULATOR=off in production

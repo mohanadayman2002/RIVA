@@ -46,6 +46,8 @@ function photoCount(n, rtl) {
 export function renderPresentation(presentation, { baseUrl }) {
   const text = presentation.text || '';
   const brand = presentation.brand || {};
+  const markLeft = brand.markLeft ?? '';
+  const markRight = brand.markRight ?? '';
   const rtl = ARABIC_RE.test(text);
 
   const images = [...(presentation.images || []), ...(presentation.floorplans || [])].map((rel) =>
@@ -88,11 +90,16 @@ ${images[0] ? `<meta property="og:image" content="${escapeHtml(images[0])}">` : 
   }
   .inner{padding:clamp(26px,5vw,52px) clamp(20px,5vw,56px)}
 
-  .brand{
-    font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:#9a9791;
-    margin:0 0 22px;font-weight:600;
+  /* direction:ltr pins REVA to the physical left and CG to the physical
+     right, so the corners do not swap on an Arabic listing */
+  .marks{
+    direction:ltr;display:flex;justify-content:space-between;align-items:baseline;
+    gap:16px;margin:0 0 24px;
   }
-  html[dir="rtl"] .brand{letter-spacing:0;text-transform:none;font-size:.84rem}
+  .marks span{
+    font-size:.78rem;letter-spacing:.2em;text-transform:uppercase;
+    color:#8a8781;font-weight:700;
+  }
 
   h1{
     font-size:clamp(1.45rem,4vw,2.05rem);line-height:1.22;font-weight:600;
@@ -166,7 +173,7 @@ ${images[0] ? `<meta property="og:image" content="${escapeHtml(images[0])}">` : 
 <body>
 <article class="card">
   <div class="inner">
-    ${brand.name ? `<p class="brand">${escapeHtml(brand.name)}</p>` : ''}
+    ${markLeft || markRight ? `<header class="marks"><span>${escapeHtml(markLeft)}</span><span>${escapeHtml(markRight)}</span></header>` : ''}
     ${head ? `<h1>${escapeHtml(head)}</h1>` : ''}
     <p class="text">${escapeHtml(body)}</p>
     ${
