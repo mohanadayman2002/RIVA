@@ -54,8 +54,6 @@ export const config = {
   // How long to wait after the last photo before assuming the user is done (ms)
   batchIdleMs: Number(process.env.BATCH_IDLE_MS || 8000),
 
-  // Max media per batch
-  maxImages: Number(process.env.MAX_IMAGES || 25),
 };
 
 export function assertWhatsAppConfig() {

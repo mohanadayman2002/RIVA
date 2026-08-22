@@ -107,7 +107,7 @@ export function mountSimulator(app) {
     ensureSim(simId);
 
     const ids = [];
-    for (const image of images.slice(0, config.maxImages)) {
+    for (const image of images) {
       const buffer = Buffer.from(String(image.data || '').split(',').pop(), 'base64');
       if (!buffer.length) continue;
 

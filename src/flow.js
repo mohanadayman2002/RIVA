@@ -81,9 +81,7 @@ async function onBatchIdle(waId) {
   const session = await getSession(waId);
   if (!session) return;
 
-  if (session.step === STEP.AWAITING_IMAGES && session.images.length > 0) {
-    await promptForText(session);
-  } else if (session.step === STEP.AWAITING_TEXT && session.text.trim()) {
+  if (session.step === STEP.AWAITING_TEXT && session.text.trim()) {
     await promptForFloorplan(session);
   } else if (session.step === STEP.AWAITING_FLOORPLANS && session.floorplans.length > 0) {
     await generate(session);
@@ -91,12 +89,6 @@ async function onBatchIdle(waId) {
 }
 
 // ---------------------------------------------------------------- prompts
-
-async function promptForText(session) {
-  session.step = STEP.AWAITING_TEXT;
-  await saveSession(session);
-  await sendText(session.id, t(session.lang, 'askText', { n: session.images.length }), { preview: false });
-}
 
 async function promptForFloorplan(session) {
   session.step = STEP.ASK_FLOORPLAN;
@@ -114,14 +106,13 @@ async function startCollecting(session) {
   session.floorplans = [];
   session.text = '';
   await saveSession(session);
-  await sendText(session.id, t(session.lang, 'greeting', { brand: config.brand.name }), { preview: false });
+  await sendText(session.id, t(session.lang, 'start'), { preview: false });
 }
 
 // ---------------------------------------------------------------- generation
 
 async function generate(session) {
   clearBatchTimer(session.id);
-  await sendText(session.id, t(session.lang, 'generating'), { preview: false });
 
   const presentation = await savePresentation({
     id: newId(8),
@@ -142,11 +133,9 @@ async function generate(session) {
   session.lastPresentationId = presentation.id;
   await saveSession(session);
 
+  // The link, on its own. Nothing follows it.
   const url = `${config.baseUrl}/p/${presentation.id}`;
   await sendText(session.id, t(session.lang, 'ready', { url }));
-  await sendButtons(session.id, t(session.lang, 'startNew'), [
-    { id: ACTION.NEW_DECK, title: t(session.lang, 'buttons.newDeck') },
-  ]);
 
   console.log(`[flow] presentation ${presentation.id} for ${session.id} ` +
     `(${presentation.images.length} photos, ${presentation.floorplans.length} plans)`);
@@ -162,10 +151,6 @@ async function generate(session) {
 
 async function collectImage(session, msg, bucket) {
   const list = session[bucket];
-  if (list.length >= config.maxImages) {
-    await sendText(session.id, t(session.lang, 'limitReached', { n: config.maxImages }), { preview: false });
-    return false;
-  }
 
   try {
     const media = await saveIncomingMedia({
@@ -247,17 +232,15 @@ async function route(msg, contact) {
       return startCollecting(session);
   }
 }
-
 async function handleImage(session, msg) {
   const first = session.images.length === 0;
   const added = await collectImage(session, msg, 'images');
   if (!added) return;
 
-  scheduleBatchTimer(session.id);
-
+  // The only prompt of this step, asked once.
   if (first) {
-    await sendButtons(session.id, t(session.lang, 'firstPhoto'), [
-      { id: ACTION.DONE_PHOTOS, title: t(session.lang, 'buttons.donePhotos') },
+    await sendButtons(session.id, t(session.lang, 'donePhotos'), [
+      { id: ACTION.DONE_PHOTOS, title: t(session.lang, 'buttons.done') },
     ]);
   }
 }
@@ -268,31 +251,22 @@ async function handleAwaitingImages(session, msg) {
   }
 
   if (msg.kind === 'action' && msg.actionId === ACTION.DONE_PHOTOS) {
-    clearBatchTimer(session.id);
-    if (!session.images.length) {
-      return sendText(session.id, t(session.lang, 'needPhotos'), { preview: false });
-    }
-    return promptForText(session);
+    // Move on silently — the next question comes when their text arrives.
+    session.step = STEP.AWAITING_TEXT;
+    return saveSession(session);
   }
 
-  if (msg.kind === 'text') {
-    if (!session.images.length) {
-      return sendText(session.id, t(session.lang, 'needPhotos'), { preview: false });
-    }
-    // Any text ends the photo batch and starts collecting the listing. The text
-    // itself is never examined — whatever it is, it is kept.
-    clearBatchTimer(session.id);
+  if (msg.kind === 'text' && msg.text) {
     session.step = STEP.AWAITING_TEXT;
     return collectText(session, msg.text);
   }
 
-  return sendText(session.id, t(session.lang, 'unsupported'), { preview: false });
+  return undefined;
 }
 
 /**
- * Text is gathered exactly like photos: every message is appended, and the
- * agent says when they are finished. Nothing is parsed, judged or discarded —
- * a single letter is as valid as a full listing.
+ * Text is gathered exactly like photos: every message is appended in order and
+ * kept verbatim. Nothing is parsed, judged or discarded.
  */
 async function collectText(session, text) {
   const first = !session.text.trim();
@@ -302,8 +276,8 @@ async function collectText(session, text) {
   scheduleBatchTimer(session.id, config.textIdleMs);
 
   if (first) {
-    await sendButtons(session.id, t(session.lang, 'moreText'), [
-      { id: ACTION.DONE_TEXT, title: t(session.lang, 'buttons.doneText') },
+    await sendButtons(session.id, t(session.lang, 'doneText'), [
+      { id: ACTION.DONE_TEXT, title: t(session.lang, 'buttons.done') },
     ]);
   }
 }
@@ -311,15 +285,12 @@ async function collectText(session, text) {
 async function handleAwaitingText(session, msg) {
   if (msg.kind === 'image') {
     // More photos after the batch closed — keep them.
-    return handleImage(session, { ...msg });
+    return handleImage(session, msg);
   }
 
   if (msg.kind === 'action') {
     if (msg.actionId === ACTION.DONE_TEXT) {
       clearBatchTimer(session.id);
-      if (!session.text.trim()) {
-        return sendText(session.id, t(session.lang, 'askText', { n: session.images.length }), { preview: false });
-      }
       return promptForFloorplan(session);
     }
     return undefined; // stale tap from an earlier step
@@ -329,7 +300,7 @@ async function handleAwaitingText(session, msg) {
     return collectText(session, msg.text);
   }
 
-  return sendText(session.id, t(session.lang, 'askText', { n: session.images.length }), { preview: false });
+  return undefined;
 }
 
 async function handleAskFloorplan(session, msg) {
@@ -344,36 +315,41 @@ async function handleAskFloorplan(session, msg) {
   if (skipsPlans) return generate(session);
 
   if (wantsPlans) {
+    // Silence until a plan arrives; the Done question comes with it.
     session.step = STEP.AWAITING_FLOORPLANS;
-    await saveSession(session);
-    return sendButtons(session.id, t(session.lang, 'floorplanPrompt'), [
-      { id: ACTION.DONE_PLANS, title: t(session.lang, 'buttons.donePlans') },
-    ]);
+    return saveSession(session);
   }
 
   if (msg.kind === 'image') {
-    // They just started sending plans without answering.
+    // They started sending plans without answering.
     session.step = STEP.AWAITING_FLOORPLANS;
     await saveSession(session);
     return handleAwaitingFloorplans(session, msg);
   }
 
-  // A stale tap on an earlier step's button — ignore instead of re-asking.
-  if (msg.kind === 'action') return undefined;
+  if (msg.kind === 'action') return undefined; // stale tap
 
-  if (msg.kind === 'text' && msg.text && looksLikeDetails(msg.text)) {
-    // Extra detail sent after the fact — append it, then re-ask.
+  if (msg.kind === 'text' && msg.text) {
+    // Still typing details — keep them and wait for a yes/no.
     session.text = `${session.text}\n${msg.text}`.trim();
-    await saveSession(session);
+    return saveSession(session);
   }
 
-  return promptForFloorplan(session);
+  return undefined;
 }
 
 async function handleAwaitingFloorplans(session, msg) {
   if (msg.kind === 'image') {
+    const first = session.floorplans.length === 0;
     const added = await collectImage(session, msg, 'floorplans');
-    if (added) scheduleBatchTimer(session.id);
+    if (!added) return;
+
+    scheduleBatchTimer(session.id);
+    if (first) {
+      await sendButtons(session.id, t(session.lang, 'donePlans'), [
+        { id: ACTION.DONE_PLANS, title: t(session.lang, 'buttons.done') },
+      ]);
+    }
     return;
   }
 
@@ -385,7 +361,7 @@ async function handleAwaitingFloorplans(session, msg) {
     return generate(session);
   }
 
-  return sendText(session.id, t(session.lang, 'floorplanPrompt'), { preview: false });
+  return undefined;
 }
 
 export { STEP, ACTION };
