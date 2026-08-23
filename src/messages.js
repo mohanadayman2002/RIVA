@@ -5,6 +5,7 @@
 
 export const COPY = {
   en: {
+    askAvatar: 'Do you want to add a profile picture?',
     start: 'Send anything to start a new presentation.',
     donePhotos: 'Are you done with the photos?',
     doneText: 'Are you done with the text?',
@@ -20,6 +21,7 @@ export const COPY = {
   },
 
   ar: {
+    askAvatar: 'تحب تضيف صورة شخصية؟',
     start: 'ابعت أي حاجة لبدء عرض جديد.',
     donePhotos: 'خلصت الصور؟',
     doneText: 'خلصت النص؟',

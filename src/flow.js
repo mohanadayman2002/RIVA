@@ -22,6 +22,8 @@ const detectLang = (text) => (ARABIC_RE.test(text) ? 'ar' : 'en');
 
 const STEP = {
   IDLE: 'IDLE',
+  ASK_AVATAR: 'ASK_AVATAR',
+  AWAITING_AVATAR: 'AWAITING_AVATAR',
   AWAITING_IMAGES: 'AWAITING_IMAGES',
   AWAITING_TEXT: 'AWAITING_TEXT',
   ASK_FLOORPLAN: 'ASK_FLOORPLAN',
@@ -30,6 +32,8 @@ const STEP = {
 };
 
 const ACTION = {
+  AVATAR_YES: 'avatar_yes',
+  AVATAR_NO: 'avatar_no',
   DONE_PHOTOS: 'done_photos',
   DONE_TEXT: 'done_text',
   PLANS_YES: 'plans_yes',
@@ -97,6 +101,58 @@ async function promptForFloorplan(session) {
     { id: ACTION.PLANS_YES, title: t(session.lang, 'buttons.yes') },
     { id: ACTION.PLANS_NO, title: t(session.lang, 'buttons.no') },
   ]);
+}
+
+/**
+ * Asked once, the first time a number ever messages us. WhatsApp gives no
+ * access to a sender's profile picture, so the only way to have one is to ask.
+ */
+async function askForAvatar(session) {
+  session.step = STEP.ASK_AVATAR;
+  await saveSession(session);
+  await sendButtons(session.id, t(session.lang, 'askAvatar'), [
+    { id: ACTION.AVATAR_YES, title: t(session.lang, 'buttons.yes') },
+    { id: ACTION.AVATAR_NO, title: t(session.lang, 'buttons.no') },
+  ]);
+}
+
+/** Stored as avatars/<number>.jpg — where the presentation footer looks. */
+async function saveAvatar(session, msg) {
+  try {
+    await saveIncomingMedia({
+      runId: 'avatars',
+      mediaId: msg.mediaId,
+      mimeType: msg.mimeType,
+      filename: `${session.id.replace(/[^0-9]/g, '')}.jpg`,
+    });
+    return true;
+  } catch (err) {
+    console.error('[flow] avatar save failed:', err.message);
+    return false;
+  }
+}
+
+async function handleAskAvatar(session, msg) {
+  if (msg.kind === 'image') {
+    // They sent it straight away.
+    await saveAvatar(session, msg);
+    return startCollecting(session);
+  }
+  if (msg.kind === 'action' && msg.actionId === ACTION.AVATAR_YES) {
+    session.step = STEP.AWAITING_AVATAR;
+    return saveSession(session);
+  }
+  // "No", or anything else: get on with it.
+  return startCollecting(session);
+}
+
+async function handleAwaitingAvatar(session, msg) {
+  if (msg.kind === 'image') {
+    await saveAvatar(session, msg);
+    return startCollecting(session);
+  }
+  if (msg.kind === 'action') return undefined;
+  return startCollecting(session);
 }
 
 async function startCollecting(session) {
@@ -179,6 +235,9 @@ async function route(msg, contact) {
   const waId = msg.from;
   let session = await getSession(waId);
 
+  // No session row has ever existed for this number, so this is their first
+  // message. Sessions are upserted and never deleted, so the check holds.
+  const firstContact = !session;
   if (!session) {
     session = await resetSession(waId, contact?.profile?.name);
     session.lang = 'en';
@@ -201,6 +260,8 @@ async function route(msg, contact) {
 
   if (dirty) await saveSession(session);
 
+  if (firstContact) return askForAvatar(session);
+
   // Global commands
   if (msg.kind === 'action' && msg.actionId === ACTION.NEW_DECK) {
     return startCollecting(session);
@@ -218,6 +279,12 @@ async function route(msg, contact) {
 
     case STEP.AWAITING_IMAGES:
       return handleAwaitingImages(session, msg);
+
+    case STEP.ASK_AVATAR:
+      return handleAskAvatar(session, msg);
+
+    case STEP.AWAITING_AVATAR:
+      return handleAwaitingAvatar(session, msg);
 
     case STEP.AWAITING_TEXT:
       return handleAwaitingText(session, msg);
