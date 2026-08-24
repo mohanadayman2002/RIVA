@@ -73,6 +73,10 @@ export function createServer() {
     setImmediate(() => processPayload(payload).catch((err) => console.error('[webhook]', err)));
   });
 
+  // ---------------------------------------------------------------- brand assets
+  // Committed to the repo (unlike data/), so the logo ships with the deploy.
+  app.use('/brand', express.static(path.join(config.root, 'public'), { maxAge: '30d', immutable: false }));
+
   // ---------------------------------------------------------------- simulator
   if (config.simulator) mountSimulator(app);
 

@@ -18,7 +18,8 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
-const mediaUrl = (baseUrl, rel) => `${baseUrl}/media/${rel.split('/').map(encodeURIComponent).join('/')}`;
+const mediaPath = (rel) => `/media/${rel.split('/').map(encodeURIComponent).join('/')}`;
+const mediaUrl = (baseUrl, rel) => `${baseUrl}${mediaPath(rel)}`;
 
 /**
  * Splits off the first non-empty line for display and for the page title.
@@ -70,11 +71,19 @@ export function renderPresentation(presentation, { baseUrl }) {
   const mark = brand.mark ?? brand.markRight ?? '';
   const rtl = ARABIC_RE.test(text);
 
-  const images = [...(presentation.images || []), ...(presentation.floorplans || [])].map((rel) =>
-    mediaUrl(baseUrl, rel),
-  );
+  // Same-origin assets use root-relative urls, so the page renders correctly
+  // even if BASE_URL is stale. Only og:image has to be absolute, because
+  // crawlers fetch it out of context.
+  const files = [...(presentation.images || []), ...(presentation.floorplans || [])];
+  const images = files.map(mediaPath);
+  const ogImage = files[0] ? mediaUrl(baseUrl, files[0]) : '';
   const { head, body } = splitFirstLine(text);
   const title = head || brand.name || 'Property';
+
+  // What WhatsApp shows under the title when the link is forwarded: the rest of
+  // the message on one line, trimmed at a word boundary.
+  const flat = body.replace(/\s+/g, ' ').trim();
+  const preview = flat.length > 160 ? `${flat.slice(0, 157).replace(/\s\S*$/, '')}…` : flat;
 
   const created = presentation.createdAt ? new Date(presentation.createdAt) : null;
   const dateLine = created
@@ -88,7 +97,7 @@ export function renderPresentation(presentation, { baseUrl }) {
   // WhatsApp gives no access to a sender's profile picture, so this points at a
   // photo uploaded to avatars/<number>.jpg. When there isn't one the <img>
   // fails, removes itself, and the initials underneath show through.
-  const avatar = agentDigits ? `${baseUrl}/media/avatars/${agentDigits}.jpg` : '';
+  const avatar = agentDigits ? `/media/avatars/${agentDigits}.jpg` : '';
   const waLink = agentDigits ? `https://wa.me/${agentDigits}` : '';
   const sharedBy = rtl ? 'أرسلها' : 'Shared by';
   const chatLabel = rtl ? 'مراسلة على واتساب' : 'Message on WhatsApp';
@@ -99,9 +108,10 @@ export function renderPresentation(presentation, { baseUrl }) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f2f1ee">
+<meta name="format-detection" content="telephone=no">
 <title>${escapeHtml(title)}</title>
 <meta property="og:title" content="${escapeHtml(title)}">
-${images[0] ? `<meta property="og:image" content="${escapeHtml(images[0])}">` : ''}
+${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
 <meta property="og:type" content="website">
 <style>
   *,*::before,*::after{box-sizing:border-box}
@@ -124,10 +134,11 @@ ${images[0] ? `<meta property="og:image" content="${escapeHtml(images[0])}">` : 
 
   /* direction:ltr keeps the mark in the physical top-left even when the
      listing is Arabic and the page as a whole is RTL */
-  .marks{direction:ltr;margin:0 0 clamp(20px,3vw,30px)}
+  .marks{direction:ltr;margin:0 0 clamp(20px,3vw,30px);line-height:0}
+  .marks img{height:clamp(36px,6vw,46px);width:auto;display:block}
   .marks span{
     font-size:.82rem;letter-spacing:.24em;text-transform:uppercase;
-    color:#6f6c66;font-weight:700;
+    color:#6f6c66;font-weight:700;line-height:1.6;
   }
 
   h1{
@@ -172,7 +183,7 @@ ${images[0] ? `<meta property="og:image" content="${escapeHtml(images[0])}">` : 
     padding:clamp(20px,3.5vw,26px) clamp(20px,5vw,56px) clamp(24px,4vw,32px);
     border-top:1px solid #ecebe6;background:#fbfaf8;
   }
-  .who{display:flex;align-items:center;gap:14px;min-width:0;flex:1}
+  .who{display:flex;align-items:center;gap:14px;min-width:0;flex:1 1 240px}
   .face{
     position:relative;width:54px;height:54px;flex:none;border-radius:50%;
     background:#e2dfd8;color:#5c5952;display:grid;place-items:center;
@@ -188,7 +199,10 @@ ${images[0] ? `<meta property="og:image" content="${escapeHtml(images[0])}">` : 
     margin:2px 0 0;font-weight:650;font-size:1.02rem;color:#171614;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   }
-  .who-phone{margin:1px 0 0;font-size:.9rem;color:#7c7972;direction:ltr;unicode-bidi:plaintext}
+  .who-phone{margin:1px 0 0;font-size:.9rem;direction:ltr;unicode-bidi:plaintext}
+  /* iOS auto-links phone numbers and paints them blue; this is our own link */
+  .who-phone a{color:#7c7972;text-decoration:none}
+  .who-phone a:hover{text-decoration:underline}
 
   .chat{
     display:inline-flex;align-items:center;gap:9px;text-decoration:none;
@@ -198,6 +212,12 @@ ${images[0] ? `<meta property="og:image" content="${escapeHtml(images[0])}">` : 
   }
   .chat:hover{background:#188047;transform:translateY(-1px)}
   .chat svg{width:18px;height:18px;fill:currentColor;flex:none}
+  /* a phone cannot hold the details and the button side by side without
+     squeezing the name, so below this width the button takes its own line */
+  @media (max-width:560px){
+    .agent{gap:16px}
+    .chat{width:100%;justify-content:center;padding:14px 20px}
+  }
 
   /* full-size viewer */
   .viewer{
@@ -239,7 +259,7 @@ ${images[0] ? `<meta property="og:image" content="${escapeHtml(images[0])}">` : 
 <body>
 <article class="card">
   <div class="inner">
-    ${mark ? `<header class="marks"><span>${escapeHtml(mark)}</span></header>` : ''}
+    <header class="marks"><img src="/brand/cg-logo.png" alt="${escapeHtml(mark || 'logo')}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${escapeHtml(mark)}'}))"></header>
     ${head ? `<h1>${escapeHtml(head)}</h1>` : ''}
     <p class="text">${escapeHtml(body)}</p>
     ${
@@ -271,7 +291,7 @@ ${images[0] ? `<meta property="og:image" content="${escapeHtml(images[0])}">` : 
              <div class="who-text">
                <p class="who-label">${escapeHtml(sharedBy)}</p>
                ${agentName ? `<p class="who-name">${escapeHtml(agentName)}</p>` : ''}
-               <p class="who-phone">${escapeHtml(agentPhone)}</p>
+               <p class="who-phone"><a href="tel:${escapeHtml(agentPhone)}">${escapeHtml(agentPhone)}</a></p>
              </div>
            </div>
            <a class="chat" href="${escapeHtml(waLink)}" target="_blank" rel="noopener">
