@@ -59,6 +59,10 @@ function initials(name, phone) {
   return String(phone || '').replace(/\D/g, '').slice(-2) || '·';
 }
 
+const PHONE_GLYPH =
+  'M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 ' +
+  '.6-.4 1-1 1C10.7 21 3 13.3 3 3.9c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .7-.2 1l-2.2 2.3z';
+
 const WHATSAPP_GLYPH =
   'M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.87 9.87 0 0 0 ' +
   '4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm0 ' +
@@ -99,7 +103,6 @@ export function renderPresentation(presentation, { baseUrl }) {
   // fails, removes itself, and the initials underneath show through.
   const avatar = agentDigits ? `/media/avatars/${agentDigits}.jpg` : '';
   const waLink = agentDigits ? `https://wa.me/${agentDigits}` : '';
-  const sharedBy = rtl ? 'أرسلها' : 'Shared by';
   const chatLabel = rtl ? 'مراسلة على واتساب' : 'Message on WhatsApp';
 
   return `<!doctype html>
@@ -110,7 +113,9 @@ export function renderPresentation(presentation, { baseUrl }) {
 <meta name="theme-color" content="#f2f1ee">
 <meta name="format-detection" content="telephone=no">
 <title>${escapeHtml(title)}</title>
+<link rel="icon" href="/brand/favicon.png" type="image/png">
 <meta property="og:title" content="${escapeHtml(title)}">
+${preview ? `<meta property="og:description" content="${escapeHtml(preview)}">` : ''}
 ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
 <meta property="og:type" content="website">
 <style>
@@ -179,39 +184,79 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
 
   /* ---- who sent it ---- */
   .agent{
-    display:flex;align-items:center;gap:clamp(12px,2vw,18px);flex-wrap:wrap;
-    padding:clamp(20px,3.5vw,26px) clamp(20px,5vw,56px) clamp(24px,4vw,32px);
+    padding:clamp(18px,3vw,26px) clamp(16px,4vw,40px) clamp(22px,4vw,36px);
     border-top:1px solid #ecebe6;background:#fbfaf8;
   }
-  .who{display:flex;align-items:center;gap:14px;min-width:0;flex:1 1 240px}
+  .contact{
+    position:relative;overflow:hidden;background:#fff;
+    border:1px solid #eeece7;border-radius:18px;
+    padding:clamp(16px,3vw,22px);
+    box-shadow:0 1px 2px rgba(23,22,20,.04),0 10px 30px rgba(23,22,20,.06);
+  }
+  /* the faint dot field in the top corner, purely decorative */
+  .contact::after{
+    content:"";position:absolute;inset-block-start:14px;inset-inline-end:14px;
+    width:104px;height:52px;pointer-events:none;
+    background-image:radial-gradient(#1f9d55 1.1px, transparent 1.1px);
+    background-size:13px 13px;opacity:.14;
+  }
+
+  .who{display:flex;align-items:center;gap:clamp(12px,2.5vw,18px);min-width:0}
   .face{
-    position:relative;width:54px;height:54px;flex:none;border-radius:50%;
-    background:#e2dfd8;color:#5c5952;display:grid;place-items:center;
-    font-weight:700;font-size:1.05rem;letter-spacing:.02em;overflow:hidden;
+    position:relative;width:clamp(56px,13vw,68px);height:clamp(56px,13vw,68px);
+    flex:none;border-radius:50%;
+    background:linear-gradient(155deg,#2c7a52 0%,#0f3f2a 100%);
+    color:#fff;display:grid;place-items:center;
+    font-weight:700;font-size:clamp(1.15rem,3.4vw,1.4rem);letter-spacing:.02em;
+    box-shadow:0 4px 14px rgba(15,63,42,.28);
   }
-  .face img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-  .who-text{min-width:0}
-  .who-label{
-    margin:0;font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:#a3a099;
+  .face img{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;
   }
-  html[dir="rtl"] .who-label{letter-spacing:0;text-transform:none;font-size:.8rem}
+  /* a WhatsApp mark rather than a tick: it says "reachable here", where a tick
+     would imply a verification nobody has performed */
+  .face::after{
+    content:"";position:absolute;inset-block-end:-2px;inset-inline-end:-2px;
+    width:24px;height:24px;border-radius:50%;background:#25d366;
+    border:3px solid #fff;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff'%3E%3Cpath d='M12 2a10 10 0 0 0-8.6 15l-1.3 4.6 4.8-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.2 1.1-1.7 1.2-.4 0-1 .1-1.6-.1-.4-.1-.8-.3-1.4-.5-2.5-1.1-4.1-3.6-4.2-3.7-.1-.2-1-1.3-1-2.5s.6-1.8.8-2c.2-.3.5-.3.6-.3h.5c.2 0 .4-.1.6.4l.8 1.9c.1.1.1.3 0 .4l-.3.4-.4.4c-.1.1-.2.3-.1.5.2.3.7 1.1 1.4 1.8.9.8 1.6 1 1.9 1.2.2.1.4 0 .5-.1l.8-1c.2-.2.3-.2.5-.1l1.8.9c.2.1.4.2.5.3v1z'/%3E%3C/svg%3E");
+    background-size:15px 15px;background-position:center;background-repeat:no-repeat;
+  }
+
+  .who-text{min-width:0;flex:1}
   .who-name{
-    margin:2px 0 0;font-weight:650;font-size:1.02rem;color:#171614;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    margin:0;font-weight:700;font-size:clamp(1.12rem,3.6vw,1.35rem);
+    color:#141312;letter-spacing:-.01em;line-height:1.25;
+    overflow:hidden;text-overflow:ellipsis;
   }
-  .who-phone{margin:1px 0 0;font-size:.9rem;direction:ltr;unicode-bidi:plaintext}
+  .who-phone{
+    margin:8px 0 0;display:flex;align-items:center;gap:8px;
+    font-size:clamp(.88rem,2.6vw,.95rem);
+  }
+  .who-phone .pip{
+    width:26px;height:26px;flex:none;border-radius:50%;background:#e7f5ed;
+    display:grid;place-items:center;
+  }
+  .who-phone .pip svg{width:13px;height:13px;fill:#1f9d55}
   /* iOS auto-links phone numbers and paints them blue; this is our own link */
-  .who-phone a{color:#7c7972;text-decoration:none}
-  .who-phone a:hover{text-decoration:underline}
+  .who-phone a{color:#6f6c66;text-decoration:none;direction:ltr;unicode-bidi:plaintext}
+  .who-phone a:hover{color:#1f9d55}
+
+  .contact hr{
+    border:0;border-top:1px solid #efedE8;margin:clamp(14px,2.5vw,18px) 0 0;
+  }
 
   .chat{
-    display:inline-flex;align-items:center;gap:9px;text-decoration:none;
-    background:#1f9d55;color:#fff;font-weight:600;font-size:.94rem;
-    padding:12px 20px;border-radius:999px;white-space:nowrap;
-    transition:background .15s ease,transform .15s ease;
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    margin-top:clamp(14px,2.5vw,18px);text-decoration:none;
+    background:linear-gradient(100deg,#25a75c 0%,#127a42 100%);
+    color:#fff;font-weight:700;font-size:clamp(.95rem,2.8vw,1rem);
+    padding:15px 22px;border-radius:999px;
+    box-shadow:0 6px 18px rgba(18,122,66,.28);
+    transition:filter .15s ease,transform .15s ease,box-shadow .15s ease;
   }
-  .chat:hover{background:#188047;transform:translateY(-1px)}
-  .chat svg{width:18px;height:18px;fill:currentColor;flex:none}
+  .chat:hover{filter:brightness(1.07);transform:translateY(-1px);box-shadow:0 8px 22px rgba(18,122,66,.34)}
+  .chat:active{transform:translateY(0)}
+  .chat svg{width:20px;height:20px;fill:currentColor;flex:none}
   /* a phone cannot hold the details and the button side by side without
      squeezing the name, so below this width the button takes its own line */
   @media (max-width:560px){
@@ -284,20 +329,25 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
   ${
     agentDigits
       ? `<footer class="agent">
-           <div class="who">
-             <div class="face">${escapeHtml(initials(agentName, agentPhone))}${
-               avatar ? `<img src="${escapeHtml(avatar)}" alt="" onerror="this.remove()">` : ''
-             }</div>
-             <div class="who-text">
-               <p class="who-label">${escapeHtml(sharedBy)}</p>
-               ${agentName ? `<p class="who-name">${escapeHtml(agentName)}</p>` : ''}
-               <p class="who-phone"><a href="tel:${escapeHtml(agentPhone)}">${escapeHtml(agentPhone)}</a></p>
+           <div class="contact">
+             <div class="who">
+               <div class="face">${escapeHtml(initials(agentName, agentPhone))}${
+                 avatar ? `<img src="${escapeHtml(avatar)}" alt="" onerror="this.remove()">` : ''
+               }</div>
+               <div class="who-text">
+                 ${agentName ? `<p class="who-name">${escapeHtml(agentName)}</p>` : ''}
+                 <p class="who-phone">
+                   <span class="pip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${PHONE_GLYPH}"/></svg></span>
+                   <a href="tel:${escapeHtml(agentPhone)}">${escapeHtml(agentPhone)}</a>
+                 </p>
+               </div>
              </div>
+             <hr>
+             <a class="chat" href="${escapeHtml(waLink)}" target="_blank" rel="noopener">
+               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="${WHATSAPP_GLYPH}"/></svg>
+               ${escapeHtml(chatLabel)}
+             </a>
            </div>
-           <a class="chat" href="${escapeHtml(waLink)}" target="_blank" rel="noopener">
-             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="${WHATSAPP_GLYPH}"/></svg>
-             ${escapeHtml(chatLabel)}
-           </a>
          </footer>`
       : ''
   }
