@@ -206,7 +206,7 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
   /* the reference gives the card no outline: against a white footer it reads by
      its shadow alone */
   .contact{
-    position:relative;overflow:hidden;background:#fff;border-radius:18px;
+    position:relative;overflow:hidden;background:#fff;border-radius:12px;
     padding:clamp(20px,5vw,26px);
     font-family:"Jost","Cairo","Segoe UI",system-ui,-apple-system,"Noto Sans Arabic",Arial,sans-serif;
     box-shadow:0 1px 2px rgba(23,22,20,.03),0 14px 34px rgba(23,22,20,.09);
@@ -216,17 +216,17 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
      so they stay behind the content. */
   .contact::after{
     content:"";position:absolute;inset-block-start:0;inset-inline-end:0;z-index:0;
-    width:clamp(78px,25%,120px);height:clamp(38px,12%,52px);pointer-events:none;
-    background-image:radial-gradient(#1f9d55 1.25px, transparent 1.25px);
-    background-size:10px 10px;opacity:.28;
+    width:clamp(75px,23%,112px);height:clamp(31px,9.5%,44px);pointer-events:none;
+    background-image:radial-gradient(#1f9d55 1.1px, transparent 1.1px);
+    background-size:7.5px 7.5px;opacity:.3;
   }
   /* The arcs are struck from a centre well outside the card, so what crosses it
      are gentle near-vertical sweeps rather than tight concentric rings. */
   .contact::before{
     content:"";position:absolute;inset-block:0;inset-inline-start:0;z-index:0;
-    width:27%;pointer-events:none;opacity:.5;
+    width:24%;pointer-events:none;opacity:.45;
     background:repeating-radial-gradient(circle at -170px 50%,
-      transparent 0 17px,#eceae4 17px 18px);
+      transparent 0 18px,#e9e7e1 18px 19px);
     -webkit-mask-image:linear-gradient(to right,#000 30%,transparent);
     mask-image:linear-gradient(to right,#000 30%,transparent);
   }
@@ -243,7 +243,7 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
      few pixels as it does in the reference */
   .who .rule{flex:none;align-self:stretch;width:1px;background:#eae8e3;margin-block:-3px}
   .face{
-    position:relative;width:clamp(56px,13vw,68px);height:clamp(56px,13vw,68px);
+    position:relative;width:clamp(58px,13.5vw,70px);height:clamp(58px,13.5vw,70px);
     flex:none;border-radius:50%;
     background:linear-gradient(155deg,#2c7a52 0%,#0f3f2a 100%);
     color:#fff;display:grid;place-items:center;
@@ -267,22 +267,22 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
      The seal sits in the text flow rather than beside the paragraph, so a name
      long enough to wrap keeps it at the end of the last word. */
   .who-name{
-    margin:0;font-weight:700;font-size:clamp(1.76rem,5.6vw,1.9rem);
+    margin:0;font-weight:700;font-size:clamp(1.43rem,4.6vw,1.56rem);
     color:#141312;letter-spacing:-.02em;line-height:1.2;
     overflow-wrap:anywhere;
   }
   .who-name .seal{
-    width:.56em;height:.56em;margin-inline-start:.2em;vertical-align:.08em;
+    width:.67em;height:.67em;margin-inline-start:.2em;vertical-align:.06em;
   }
   .who-name .seal .disc{fill:#1f9d55}
   .who-name .seal .tick{fill:#fff}
   .who-phone{
-    margin:8px 0 0;display:flex;align-items:center;gap:8px;
-    font-size:clamp(.88rem,2.6vw,.95rem);
+    margin:7px 0 0;display:flex;align-items:center;gap:8px;
+    font-size:clamp(.69rem,2vw,.75rem);
   }
   /* a discreet disc, barely taller than the digits beside it */
   .who-phone .pip{
-    width:clamp(15px,4vw,18px);height:clamp(15px,4vw,18px);
+    width:clamp(14px,3.7vw,17px);height:clamp(14px,3.7vw,17px);
     flex:none;border-radius:50%;background:#e7f5ed;
     display:grid;place-items:center;
   }
@@ -292,11 +292,11 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
   .who-phone a:hover{color:#1f9d55}
 
   .chat{
-    display:flex;align-items:center;justify-content:center;gap:10px;
+    display:flex;align-items:center;justify-content:center;gap:8px;
     margin-top:clamp(26px,7vw,32px);text-decoration:none;
     background:linear-gradient(100deg,#25a75c 0%,#127a42 100%);
     color:#fff;font-weight:700;font-size:clamp(.95rem,2.8vw,1rem);
-    line-height:1;padding:10px 22px;border-radius:999px;
+    line-height:1;padding:9px 22px;border-radius:999px;
     box-shadow:0 6px 18px rgba(18,122,66,.28);
     transition:filter .15s ease,transform .15s ease,box-shadow .15s ease;
   }
@@ -304,7 +304,7 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
   .chat:active{transform:translateY(0)}
   /* drawn hollow, as an outline */
   .chat svg{
-    width:18px;height:18px;flex:none;
+    width:19px;height:19px;flex:none;
     fill:none;stroke:currentColor;stroke-width:1.6;
     stroke-linecap:round;stroke-linejoin:round;
   }
@@ -312,7 +312,7 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
      squeezing the name, so below this width the button takes its own line */
   @media (max-width:560px){
     .agent{gap:16px}
-    .chat{width:100%;justify-content:center;padding:10px 20px}
+    .chat{width:100%;justify-content:center;padding:9px 20px}
   }
 
   /* full-size viewer */
