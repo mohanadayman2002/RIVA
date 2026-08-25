@@ -222,22 +222,22 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
   .contact::after{
     content:"";position:absolute;inset-block-start:0;inset-inline-end:0;z-index:0;
     width:clamp(75px,23%,112px);height:clamp(31px,9.5%,44px);pointer-events:none;
-    background-image:radial-gradient(#1f9d55 1.1px, transparent 1.1px);
-    background-size:7.5px 7.5px;opacity:.38;
-    -webkit-mask-image:linear-gradient(to bottom left,#000 25%,transparent);
-    mask-image:linear-gradient(to bottom left,#000 25%,transparent);
+    background-image:radial-gradient(#6f9e88 1.1px, transparent 1.1px);
+    background-size:7.5px 7.5px;opacity:.62;
+    -webkit-mask-image:linear-gradient(to bottom left,#000 45%,transparent);
+    mask-image:linear-gradient(to bottom left,#000 45%,transparent);
   }
   /* The arcs bow the other way from a first reading of them: in the reference
      they sit furthest left at mid-height, so the centre they are struck from is
-     off to the RIGHT, not the left. Placing it at 330% of this band's own width
+     off to the RIGHT, not the left. Placing it at 260% of this band's own width
      keeps the centre off-card and gives the curvature the reference shows. */
   .contact::before{
     content:"";position:absolute;inset-block:0;inset-inline-start:0;z-index:0;
-    width:26%;pointer-events:none;opacity:.55;
-    background:repeating-radial-gradient(circle at 330% 50%,
-      transparent 0 16px,#e7e5df 16px 17px);
-    -webkit-mask-image:linear-gradient(to right,#000 15%,transparent);
-    mask-image:linear-gradient(to right,#000 15%,transparent);
+    width:30%;pointer-events:none;opacity:.5;
+    background:repeating-radial-gradient(circle at 260% 50%,
+      transparent 0 10.5px,#e4e2dc 10.5px 11.5px);
+    -webkit-mask-image:linear-gradient(to right,#000 30%,transparent);
+    mask-image:linear-gradient(to right,#000 30%,transparent);
   }
   .who,.chat{position:relative;z-index:1}
 
@@ -251,13 +251,18 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
   /* the hairline between the avatar and the details, overrunning the row by a
      few pixels as it does in the reference */
   .who .rule{flex:none;align-self:stretch;width:1px;background:#eae8e3;margin-block:-3px}
+  /* The reference's avatar runs light at the top left to near-black at the
+     bottom right -- diagonal, so a linear sweep, but far darker at both ends
+     than the mid-greens this started with. Its initials are larger too: cap
+     height is about 28% of the circle, which at Jost's proportions puts the
+     font size near 0.39 of the diameter. */
   .face{
     position:relative;width:clamp(58px,13.5vw,70px);height:clamp(58px,13.5vw,70px);
     flex:none;border-radius:50%;
-    background:linear-gradient(155deg,#2c7a52 0%,#0f3f2a 100%);
+    background:linear-gradient(150deg,#3d8060 0%,#1b4b36 50%,#072016 100%);
     color:#fff;display:grid;place-items:center;
-    font-weight:700;font-size:clamp(1.15rem,3.4vw,1.4rem);letter-spacing:.02em;
-    box-shadow:0 0 0 4px #eef2ef,0 4px 14px rgba(15,63,42,.28);
+    font-weight:700;font-size:clamp(22.6px,5.3vw,27.3px);letter-spacing:0;
+    box-shadow:0 0 0 4px #edf1ee,0 4px 14px rgba(8,32,23,.3);
   }
   .face img{
     position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;
