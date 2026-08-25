@@ -63,11 +63,21 @@ const PHONE_GLYPH =
   'M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 ' +
   '.6-.4 1-1 1C10.7 21 3 13.3 3 3.9c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .7-.2 1l-2.2 2.3z';
 
-const WHATSAPP_GLYPH =
-  'M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.87 9.87 0 0 0 ' +
-  '4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm0 ' +
-  '18.15h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 0 1-1.26-4.38c0-4.54 ' +
-  '3.7-8.23 8.25-8.23 2.2 0 4.27.86 5.83 2.41a8.19 8.19 0 0 1 2.41 5.83c0 4.54-3.7 8.23-8.24 8.23zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.8-.78.97-.14.16-.29.18-.54.06-.25-.13-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.5.11-.11.25-.29.37-.43.12-.15.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29z';
+// The scalloped "verified" seal beside the name, and the tick that sits on the
+// avatar, both as drawn in the reference design.
+const SEAL_GLYPH =
+  'M12 .6Q14.43 2.92 17.7 2.13Q18.65 5.35 21.87 6.3Q21.08 9.57 23.4 12Q21.08 14.43 21.87 ' +
+  '17.7Q18.65 18.65 17.7 21.87Q14.43 21.08 12 23.4Q9.57 21.08 6.3 21.87Q5.35 18.65 2.13 ' +
+  '17.7Q2.92 14.43 .6 12Q2.92 9.57 2.13 6.3Q5.35 5.35 6.3 2.13Q9.57 2.92 12 .6Z';
+
+const TICK_GLYPH = 'M10.4 16.6 6.6 12.8l1.5-1.5 2.3 2.3 5.5-5.5 1.5 1.5z';
+
+// The button's mark is a hollow outline in the reference rather than a solid
+// glyph: the bubble is stroked, and the handset inside it is stroked too.
+const WHATSAPP_OUTLINE =
+  '<path d="M12.4 21.3a9 9 0 1 0-7.7-4.4l-1.5 4.7 4.9-1.4a9 9 0 0 0 4.3 1.1z"/>' +
+  '<path d="M9.1 9c.2-.4.5-.5.8-.5h.5l1 2.2-.9 1c.5 1.1 1.6 2.2 2.7 2.7l1-.9 2.2 ' +
+  '1v.5c0 .3 0 .6-.5.8-.6.3-1.5.2-2.5-.2a9.5 9.5 0 0 1-4.4-4.4c-.4-1-.5-1.9-.2-2.5z"/>';
 
 export function renderPresentation(presentation, { baseUrl }) {
   const text = presentation.text || '';
@@ -185,69 +195,98 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
   /* ---- who sent it ---- */
   .agent{
     padding:clamp(18px,3vw,26px) clamp(16px,4vw,40px) clamp(22px,4vw,36px);
-    border-top:1px solid #ecebe6;background:#fbfaf8;
+    border-top:1px solid #ecebe6;background:#fff;
   }
+  /* the reference gives the card no outline: against a white footer it reads by
+     its shadow alone */
   .contact{
-    position:relative;overflow:hidden;background:#fff;
-    border:1px solid #eeece7;border-radius:18px;
+    position:relative;overflow:hidden;background:#fff;border-radius:18px;
     padding:clamp(16px,3vw,22px);
-    box-shadow:0 1px 2px rgba(23,22,20,.04),0 10px 30px rgba(23,22,20,.06);
+    box-shadow:0 1px 2px rgba(23,22,20,.03),0 14px 34px rgba(23,22,20,.09);
   }
-  /* the faint dot field in the top corner, purely decorative */
+  /* a fine dot field run flush into the corner, so the card's radius clips it,
+     and concentric hairlines sweeping across the other side. Both decorative,
+     so they stay behind the content. */
   .contact::after{
-    content:"";position:absolute;inset-block-start:14px;inset-inline-end:14px;
-    width:104px;height:52px;pointer-events:none;
-    background-image:radial-gradient(#1f9d55 1.1px, transparent 1.1px);
-    background-size:13px 13px;opacity:.14;
+    content:"";position:absolute;inset-block-start:0;inset-inline-end:0;z-index:0;
+    width:clamp(78px,25%,120px);height:clamp(34px,11%,50px);pointer-events:none;
+    background-image:radial-gradient(#1f9d55 1.25px, transparent 1.25px);
+    background-size:10px 10px;opacity:.28;
   }
+  /* The arcs are struck from a centre well outside the card, so what crosses it
+     are gentle near-vertical sweeps rather than tight concentric rings. */
+  .contact::before{
+    content:"";position:absolute;inset-block:0;inset-inline-start:0;z-index:0;
+    width:34%;pointer-events:none;opacity:.6;
+    background:repeating-radial-gradient(circle at -380px 50%,
+      transparent 0 23px,#ecebe5 23px 24px);
+    -webkit-mask-image:linear-gradient(to right,#000 30%,transparent);
+    mask-image:linear-gradient(to right,#000 30%,transparent);
+  }
+  .who,.chat{position:relative;z-index:1}
+
+  /* The card keeps the same layout in both languages: the avatar leads, the
+     details sit beside it behind a hairline, and the icon comes ahead of the
+     button's label. Mirroring all of that for Arabic reads as a different card,
+     so only the words inside run right-to-left. */
+  html[dir="rtl"] .contact{direction:ltr;text-align:left}
 
   .who{display:flex;align-items:center;gap:clamp(12px,2.5vw,18px);min-width:0}
+  /* the hairline between the avatar and the details, overrunning the row by a
+     few pixels as it does in the reference */
+  .who .rule{flex:none;align-self:stretch;width:1px;background:#eae8e3;margin-block:-3px}
   .face{
     position:relative;width:clamp(56px,13vw,68px);height:clamp(56px,13vw,68px);
     flex:none;border-radius:50%;
     background:linear-gradient(155deg,#2c7a52 0%,#0f3f2a 100%);
     color:#fff;display:grid;place-items:center;
     font-weight:700;font-size:clamp(1.15rem,3.4vw,1.4rem);letter-spacing:.02em;
-    box-shadow:0 4px 14px rgba(15,63,42,.28);
+    box-shadow:0 0 0 4px #eef2ef,0 4px 14px rgba(15,63,42,.28);
   }
   .face img{
     position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;
   }
-  /* a WhatsApp mark rather than a tick: it says "reachable here", where a tick
-     would imply a verification nobody has performed */
+  /* the tick the reference puts on the avatar */
   .face::after{
-    content:"";position:absolute;inset-block-end:-2px;inset-inline-end:-2px;
-    width:24px;height:24px;border-radius:50%;background:#25d366;
-    border:3px solid #fff;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff'%3E%3Cpath d='M12 2a10 10 0 0 0-8.6 15l-1.3 4.6 4.8-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.2 1.1-1.7 1.2-.4 0-1 .1-1.6-.1-.4-.1-.8-.3-1.4-.5-2.5-1.1-4.1-3.6-4.2-3.7-.1-.2-1-1.3-1-2.5s.6-1.8.8-2c.2-.3.5-.3.6-.3h.5c.2 0 .4-.1.6.4l.8 1.9c.1.1.1.3 0 .4l-.3.4-.4.4c-.1.1-.2.3-.1.5.2.3.7 1.1 1.4 1.8.9.8 1.6 1 1.9 1.2.2.1.4 0 .5-.1l.8-1c.2-.2.3-.2.5-.1l1.8.9c.2.1.4.2.5.3v1z'/%3E%3C/svg%3E");
-    background-size:15px 15px;background-position:center;background-repeat:no-repeat;
+    content:"";position:absolute;inset-block-end:-1px;inset-inline-end:-1px;
+    width:clamp(18px,4.8vw,21px);height:clamp(18px,4.8vw,21px);
+    border-radius:50%;background:#1f9d55;border:2.5px solid #fff;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff'%3E%3Cpath d='M10.4 16.6 6.6 12.8l1.5-1.5 2.3 2.3 5.5-5.5 1.5 1.5z'/%3E%3C/svg%3E");
+    background-size:76% 76%;background-position:center;background-repeat:no-repeat;
   }
 
   .who-text{min-width:0;flex:1}
+  /* the name leads: the reference sets it at roughly twice the number's size.
+     The seal sits in the text flow rather than beside the paragraph, so a name
+     long enough to wrap keeps it at the end of the last word. */
   .who-name{
-    margin:0;font-weight:700;font-size:clamp(1.12rem,3.6vw,1.35rem);
-    color:#141312;letter-spacing:-.01em;line-height:1.25;
-    overflow:hidden;text-overflow:ellipsis;
+    margin:0;font-weight:700;font-size:clamp(1.76rem,5.6vw,1.9rem);
+    color:#141312;letter-spacing:-.02em;line-height:1.2;
+    overflow-wrap:anywhere;
   }
+  .who-name .seal{
+    width:.56em;height:.56em;margin-inline-start:.2em;vertical-align:.08em;
+  }
+  .who-name .seal .disc{fill:#1f9d55}
+  .who-name .seal .tick{fill:#fff}
   .who-phone{
     margin:8px 0 0;display:flex;align-items:center;gap:8px;
     font-size:clamp(.88rem,2.6vw,.95rem);
   }
+  /* a discreet disc, barely taller than the digits beside it */
   .who-phone .pip{
-    width:26px;height:26px;flex:none;border-radius:50%;background:#e7f5ed;
+    width:clamp(15px,4vw,18px);height:clamp(15px,4vw,18px);
+    flex:none;border-radius:50%;background:#e7f5ed;
     display:grid;place-items:center;
   }
-  .who-phone .pip svg{width:13px;height:13px;fill:#1f9d55}
+  .who-phone .pip svg{width:60%;height:60%;fill:#1f9d55}
   /* iOS auto-links phone numbers and paints them blue; this is our own link */
   .who-phone a{color:#6f6c66;text-decoration:none;direction:ltr;unicode-bidi:plaintext}
   .who-phone a:hover{color:#1f9d55}
 
-  .contact hr{
-    border:0;border-top:1px solid #efedE8;margin:clamp(14px,2.5vw,18px) 0 0;
-  }
-
   .chat{
     display:flex;align-items:center;justify-content:center;gap:10px;
-    margin-top:clamp(14px,2.5vw,18px);text-decoration:none;
+    margin-top:clamp(20px,4.5vw,26px);text-decoration:none;
     background:linear-gradient(100deg,#25a75c 0%,#127a42 100%);
     color:#fff;font-weight:700;font-size:clamp(.95rem,2.8vw,1rem);
     padding:15px 22px;border-radius:999px;
@@ -256,7 +295,12 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
   }
   .chat:hover{filter:brightness(1.07);transform:translateY(-1px);box-shadow:0 8px 22px rgba(18,122,66,.34)}
   .chat:active{transform:translateY(0)}
-  .chat svg{width:20px;height:20px;fill:currentColor;flex:none}
+  /* drawn hollow, as an outline */
+  .chat svg{
+    width:22px;height:22px;flex:none;
+    fill:none;stroke:currentColor;stroke-width:1.6;
+    stroke-linecap:round;stroke-linejoin:round;
+  }
   /* a phone cannot hold the details and the button side by side without
      squeezing the name, so below this width the button takes its own line */
   @media (max-width:560px){
@@ -334,17 +378,21 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
                <div class="face">${escapeHtml(initials(agentName, agentPhone))}${
                  avatar ? `<img src="${escapeHtml(avatar)}" alt="" onerror="this.remove()">` : ''
                }</div>
+               <span class="rule" aria-hidden="true"></span>
                <div class="who-text">
-                 ${agentName ? `<p class="who-name">${escapeHtml(agentName)}</p>` : ''}
+                 ${
+                   agentName
+                     ? `<p class="who-name">${escapeHtml(agentName)}<svg class="seal" viewBox="0 0 24 24" aria-hidden="true"><path class="disc" d="${SEAL_GLYPH}"/><path class="tick" d="${TICK_GLYPH}"/></svg></p>`
+                     : ''
+                 }
                  <p class="who-phone">
                    <span class="pip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${PHONE_GLYPH}"/></svg></span>
                    <a href="tel:${escapeHtml(agentPhone)}">${escapeHtml(agentPhone)}</a>
                  </p>
                </div>
              </div>
-             <hr>
              <a class="chat" href="${escapeHtml(waLink)}" target="_blank" rel="noopener">
-               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="${WHATSAPP_GLYPH}"/></svg>
+               <svg viewBox="0 0 24 24" aria-hidden="true">${WHATSAPP_OUTLINE}</svg>
                ${escapeHtml(chatLabel)}
              </a>
            </div>
