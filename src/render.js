@@ -124,6 +124,12 @@ export function renderPresentation(presentation, { baseUrl }) {
 <meta name="format-detection" content="telephone=no">
 <title>${escapeHtml(title)}</title>
 <link rel="icon" href="/brand/favicon.png" type="image/png">
+<!-- The contact card is set in the reference design's faces: Jost for the
+     latin, Cairo for the arabic. Only the card uses them, and display=swap
+     means the text is legible on the system font before they land. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Jost:wght@400;600;700&display=swap">
 <meta property="og:title" content="${escapeHtml(title)}">
 ${preview ? `<meta property="og:description" content="${escapeHtml(preview)}">` : ''}
 ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
@@ -201,7 +207,8 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
      its shadow alone */
   .contact{
     position:relative;overflow:hidden;background:#fff;border-radius:18px;
-    padding:clamp(16px,3vw,22px);
+    padding:clamp(20px,5vw,26px);
+    font-family:"Jost","Cairo","Segoe UI",system-ui,-apple-system,"Noto Sans Arabic",Arial,sans-serif;
     box-shadow:0 1px 2px rgba(23,22,20,.03),0 14px 34px rgba(23,22,20,.09);
   }
   /* a fine dot field run flush into the corner, so the card's radius clips it,
@@ -209,7 +216,7 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
      so they stay behind the content. */
   .contact::after{
     content:"";position:absolute;inset-block-start:0;inset-inline-end:0;z-index:0;
-    width:clamp(78px,25%,120px);height:clamp(34px,11%,50px);pointer-events:none;
+    width:clamp(78px,25%,120px);height:clamp(38px,12%,52px);pointer-events:none;
     background-image:radial-gradient(#1f9d55 1.25px, transparent 1.25px);
     background-size:10px 10px;opacity:.28;
   }
@@ -217,9 +224,9 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
      are gentle near-vertical sweeps rather than tight concentric rings. */
   .contact::before{
     content:"";position:absolute;inset-block:0;inset-inline-start:0;z-index:0;
-    width:34%;pointer-events:none;opacity:.6;
-    background:repeating-radial-gradient(circle at -380px 50%,
-      transparent 0 23px,#ecebe5 23px 24px);
+    width:27%;pointer-events:none;opacity:.5;
+    background:repeating-radial-gradient(circle at -170px 50%,
+      transparent 0 17px,#eceae4 17px 18px);
     -webkit-mask-image:linear-gradient(to right,#000 30%,transparent);
     mask-image:linear-gradient(to right,#000 30%,transparent);
   }
@@ -286,10 +293,10 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
 
   .chat{
     display:flex;align-items:center;justify-content:center;gap:10px;
-    margin-top:clamp(20px,4.5vw,26px);text-decoration:none;
+    margin-top:clamp(26px,7vw,32px);text-decoration:none;
     background:linear-gradient(100deg,#25a75c 0%,#127a42 100%);
     color:#fff;font-weight:700;font-size:clamp(.95rem,2.8vw,1rem);
-    padding:15px 22px;border-radius:999px;
+    line-height:1;padding:10px 22px;border-radius:999px;
     box-shadow:0 6px 18px rgba(18,122,66,.28);
     transition:filter .15s ease,transform .15s ease,box-shadow .15s ease;
   }
@@ -297,7 +304,7 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
   .chat:active{transform:translateY(0)}
   /* drawn hollow, as an outline */
   .chat svg{
-    width:22px;height:22px;flex:none;
+    width:18px;height:18px;flex:none;
     fill:none;stroke:currentColor;stroke-width:1.6;
     stroke-linecap:round;stroke-linejoin:round;
   }
@@ -305,7 +312,7 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
      squeezing the name, so below this width the button takes its own line */
   @media (max-width:560px){
     .agent{gap:16px}
-    .chat{width:100%;justify-content:center;padding:14px 20px}
+    .chat{width:100%;justify-content:center;padding:10px 20px}
   }
 
   /* full-size viewer */
