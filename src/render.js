@@ -211,33 +211,29 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
   /* the reference gives the card no outline: against a white footer it reads by
      its shadow alone */
   .contact{
-    position:relative;overflow:hidden;background:#fff;border-radius:12px;
+    position:relative;overflow:hidden;background:#fff;border-radius:16px;
     padding:clamp(20px,5vw,26px);
     font-family:"Jost","Cairo","Segoe UI",system-ui,-apple-system,"Noto Sans Arabic",Arial,sans-serif;
     box-shadow:0 1px 2px rgba(23,22,20,.03),0 14px 34px rgba(23,22,20,.09);
   }
-  /* a fine dot field run flush into the corner, so the card's radius clips it,
-     and concentric hairlines sweeping across the other side. Both decorative,
-     so they stay behind the content. */
-  .contact::after{
-    content:"";position:absolute;inset-block-start:0;inset-inline-end:0;z-index:0;
-    width:clamp(75px,23%,112px);height:clamp(31px,9.5%,44px);pointer-events:none;
-    background-image:radial-gradient(#6f9e88 1.1px, transparent 1.1px);
-    background-size:7.5px 7.5px;opacity:.62;
-    -webkit-mask-image:linear-gradient(to bottom left,#000 45%,transparent);
-    mask-image:linear-gradient(to bottom left,#000 45%,transparent);
-  }
-  /* The arcs bow the other way from a first reading of them: in the reference
-     they sit furthest left at mid-height, so the centre they are struck from is
-     off to the RIGHT, not the left. Placing it at 260% of this band's own width
-     keeps the centre off-card and gives the curvature the reference shows. */
+  /* The ornament is lifted out of the reference rather than rebuilt from
+     gradients: the wave is a family of nested J-curves that pinch around 40% of
+     the height and flare along the bottom, which no repeating-radial-gradient
+     describes, and the dots are a solid green nothing like the pale grey they
+     were first drawn as. See scripts/make-card-pattern.py.
+
+     Two assets, because they tolerate scaling differently. The wave is flowing
+     and can stretch to whatever height the card ends up at; the dot grid is
+     held to its own aspect, since a stretched grid shows. */
   .contact::before{
     content:"";position:absolute;inset-block:0;inset-inline-start:0;z-index:0;
-    width:30%;pointer-events:none;opacity:.5;
-    background:repeating-radial-gradient(circle at 260% 50%,
-      transparent 0 10.5px,#e4e2dc 10.5px 11.5px);
-    -webkit-mask-image:linear-gradient(to right,#000 30%,transparent);
-    mask-image:linear-gradient(to right,#000 30%,transparent);
+    width:39.8%;pointer-events:none;
+    background:url("/brand/card-wave.png") 0 0/100% 100% no-repeat;
+  }
+  .contact::after{
+    content:"";position:absolute;inset-block-start:0;inset-inline-end:0;z-index:0;
+    width:29.5%;aspect-ratio:196/84;pointer-events:none;
+    background:url("/brand/card-dots.png") 0 0/100% 100% no-repeat;
   }
   .who,.chat{position:relative;z-index:1}
 
