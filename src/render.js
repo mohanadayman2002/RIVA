@@ -63,21 +63,26 @@ const PHONE_GLYPH =
   'M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 ' +
   '.6-.4 1-1 1C10.7 21 3 13.3 3 3.9c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .7-.2 1l-2.2 2.3z';
 
-// The scalloped "verified" seal beside the name, and the tick that sits on the
-// avatar, both as drawn in the reference design.
+// The reference uses the same scalloped seal twice -- beside the name, and on
+// the avatar -- so one shape serves both. Ten lobes, each a quadratic bulging
+// past the outer radius so its apex lands there: that rounds the bumps and
+// leaves the notches crisp. Built the other way round, the bumps come out as
+// spikes.
 const SEAL_GLYPH =
-  'M12 .6Q14.43 2.92 17.7 2.13Q18.65 5.35 21.87 6.3Q21.08 9.57 23.4 12Q21.08 14.43 21.87 ' +
-  '17.7Q18.65 18.65 17.7 21.87Q14.43 21.08 12 23.4Q9.57 21.08 6.3 21.87Q5.35 18.65 2.13 ' +
-  '17.7Q2.92 14.43 .6 12Q2.92 9.57 2.13 6.3Q5.35 5.35 6.3 2.13Q9.57 2.92 12 .6Z';
+  'M9.06 2.96Q12 -2.56 14.94 2.96Q20.56 .22 19.69 6.42Q25.85 7.5 21.5 12Q25.85 16.5 19.69 ' +
+  '17.58Q20.56 23.78 14.94 21.04Q12 26.56 9.06 21.04Q3.44 23.78 4.31 17.58Q-1.85 16.5 2.5 ' +
+  '12Q-1.85 7.5 4.31 6.42Q3.44 .22 9.06 2.96Z';
 
-const TICK_GLYPH = 'M10.4 16.6 6.6 12.8l1.5-1.5 2.3 2.3 5.5-5.5 1.5 1.5z';
+const TICK_GLYPH = 'M10.5 16.9 6.4 12.8l1.7-1.7 2.4 2.4 5.4-5.4 1.7 1.7z';
 
-// The button's mark is a hollow outline in the reference rather than a solid
-// glyph: the bubble is stroked, and the handset inside it is stroked too.
+// The mark in the reference is hollow: the bubble is a ring with its tail at the
+// lower left, and the handset inside it is solid. Fill and stroke are set per
+// path here rather than on the <svg>, so the two differ.
 const WHATSAPP_OUTLINE =
-  '<path d="M12.4 21.3a9 9 0 1 0-7.7-4.4l-1.5 4.7 4.9-1.4a9 9 0 0 0 4.3 1.1z"/>' +
-  '<path d="M9.1 9c.2-.4.5-.5.8-.5h.5l1 2.2-.9 1c.5 1.1 1.6 2.2 2.7 2.7l1-.9 2.2 ' +
-  '1v.5c0 .3 0 .6-.5.8-.6.3-1.5.2-2.5-.2a9.5 9.5 0 0 1-4.4-4.4c-.4-1-.5-1.9-.2-2.5z"/>';
+  '<path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" ' +
+  'd="M12 2.9a9.1 9.1 0 0 1 0 18.2 9.1 9.1 0 0 1-4.6-1.24L2.9 21.1l1.14-4.4A9.1 9.1 0 0 1 12 2.9Z"/>' +
+  '<path fill="currentColor" d="M9.3 8.2c.3-.3.8-.3 1 .1l.9 1.6c.12.2.08.44-.1.6l-.6.5c.5.9 ' +
+  '1.2 1.6 2.1 2.1l.5-.6c.16-.18.4-.22.6-.1l1.6.9c.4.22.4.7.1 1-.4.4-1 .6-1.6.5-2.4-.5-4.6-2.7-5.1-5.1-.1-.6.1-1.2.6-1.6Z"/>';
 
 export function renderPresentation(presentation, { baseUrl }) {
   const text = presentation.text || '';
@@ -206,29 +211,29 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
   /* the reference gives the card no outline: against a white footer it reads by
      its shadow alone */
   .contact{
-    position:relative;overflow:hidden;background:#fff;border-radius:18px;
+    position:relative;overflow:hidden;background:#fff;border-radius:16px;
     padding:clamp(20px,5vw,26px);
     font-family:"Jost","Cairo","Segoe UI",system-ui,-apple-system,"Noto Sans Arabic",Arial,sans-serif;
     box-shadow:0 1px 2px rgba(23,22,20,.03),0 14px 34px rgba(23,22,20,.09);
   }
-  /* a fine dot field run flush into the corner, so the card's radius clips it,
-     and concentric hairlines sweeping across the other side. Both decorative,
-     so they stay behind the content. */
-  .contact::after{
-    content:"";position:absolute;inset-block-start:0;inset-inline-end:0;z-index:0;
-    width:clamp(78px,25%,120px);height:clamp(38px,12%,52px);pointer-events:none;
-    background-image:radial-gradient(#1f9d55 1.25px, transparent 1.25px);
-    background-size:10px 10px;opacity:.28;
-  }
-  /* The arcs are struck from a centre well outside the card, so what crosses it
-     are gentle near-vertical sweeps rather than tight concentric rings. */
+  /* The ornament is lifted out of the reference rather than rebuilt from
+     gradients: the wave is a family of nested J-curves that pinch around 40% of
+     the height and flare along the bottom, which no repeating-radial-gradient
+     describes, and the dots are a solid green nothing like the pale grey they
+     were first drawn as. See scripts/make-card-pattern.py.
+
+     Two assets, because they tolerate scaling differently. The wave is flowing
+     and can stretch to whatever height the card ends up at; the dot grid is
+     held to its own aspect, since a stretched grid shows. */
   .contact::before{
     content:"";position:absolute;inset-block:0;inset-inline-start:0;z-index:0;
-    width:27%;pointer-events:none;opacity:.5;
-    background:repeating-radial-gradient(circle at -170px 50%,
-      transparent 0 17px,#eceae4 17px 18px);
-    -webkit-mask-image:linear-gradient(to right,#000 30%,transparent);
-    mask-image:linear-gradient(to right,#000 30%,transparent);
+    width:39.8%;pointer-events:none;
+    background:url("/brand/card-wave.png") 0 0/100% 100% no-repeat;
+  }
+  .contact::after{
+    content:"";position:absolute;inset-block-start:0;inset-inline-end:0;z-index:0;
+    width:29.5%;aspect-ratio:196/84;pointer-events:none;
+    background:url("/brand/card-dots.png") 0 0/100% 100% no-repeat;
   }
   .who,.chat{position:relative;z-index:1}
 
@@ -242,47 +247,53 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
   /* the hairline between the avatar and the details, overrunning the row by a
      few pixels as it does in the reference */
   .who .rule{flex:none;align-self:stretch;width:1px;background:#eae8e3;margin-block:-3px}
+  /* The reference's avatar runs light at the top left to near-black at the
+     bottom right -- diagonal, so a linear sweep, but far darker at both ends
+     than the mid-greens this started with. Its initials are larger too: cap
+     height is about 28% of the circle, which at Jost's proportions puts the
+     font size near 0.39 of the diameter. */
   .face{
-    position:relative;width:clamp(56px,13vw,68px);height:clamp(56px,13vw,68px);
+    position:relative;width:clamp(58px,13.5vw,70px);height:clamp(58px,13.5vw,70px);
     flex:none;border-radius:50%;
-    background:linear-gradient(155deg,#2c7a52 0%,#0f3f2a 100%);
+    background:linear-gradient(150deg,#3d8060 0%,#1b4b36 50%,#072016 100%);
     color:#fff;display:grid;place-items:center;
-    font-weight:700;font-size:clamp(1.15rem,3.4vw,1.4rem);letter-spacing:.02em;
-    box-shadow:0 0 0 4px #eef2ef,0 4px 14px rgba(15,63,42,.28);
+    font-weight:700;font-size:clamp(22.6px,5.3vw,27.3px);letter-spacing:0;
+    box-shadow:0 0 0 4px #edf1ee,0 4px 14px rgba(8,32,23,.3);
   }
   .face img{
     position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;
   }
-  /* the tick the reference puts on the avatar */
-  .face::after{
-    content:"";position:absolute;inset-block-end:-1px;inset-inline-end:-1px;
-    width:clamp(18px,4.8vw,21px);height:clamp(18px,4.8vw,21px);
-    border-radius:50%;background:#1f9d55;border:2.5px solid #fff;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff'%3E%3Cpath d='M10.4 16.6 6.6 12.8l1.5-1.5 2.3 2.3 5.5-5.5 1.5 1.5z'/%3E%3C/svg%3E");
-    background-size:76% 76%;background-position:center;background-repeat:no-repeat;
+  /* The avatar's badge is the same rosette as the name's, not a plain disc. The
+     white ring is the seal's own stroke painted under its fill, so the ring
+     follows the scallops instead of cutting them off in a circle. */
+  .face .badge{
+    position:absolute;inset-block-end:-2px;inset-inline-end:-2px;
+    width:clamp(19px,5vw,22px);height:clamp(19px,5vw,22px);
   }
+  .face .badge .disc{fill:#1f9d55;stroke:#fff;stroke-width:3;paint-order:stroke}
+  .face .badge .tick{fill:#fff}
 
   .who-text{min-width:0;flex:1}
   /* the name leads: the reference sets it at roughly twice the number's size.
      The seal sits in the text flow rather than beside the paragraph, so a name
      long enough to wrap keeps it at the end of the last word. */
   .who-name{
-    margin:0;font-weight:700;font-size:clamp(1.76rem,5.6vw,1.9rem);
+    margin:0;font-weight:700;font-size:clamp(1.43rem,4.6vw,1.56rem);
     color:#141312;letter-spacing:-.02em;line-height:1.2;
     overflow-wrap:anywhere;
   }
   .who-name .seal{
-    width:.56em;height:.56em;margin-inline-start:.2em;vertical-align:.08em;
+    width:.67em;height:.67em;margin-inline-start:.2em;vertical-align:.06em;
   }
   .who-name .seal .disc{fill:#1f9d55}
   .who-name .seal .tick{fill:#fff}
   .who-phone{
-    margin:8px 0 0;display:flex;align-items:center;gap:8px;
-    font-size:clamp(.88rem,2.6vw,.95rem);
+    margin:7px 0 0;display:flex;align-items:center;gap:8px;
+    font-size:clamp(.69rem,2vw,.75rem);
   }
   /* a discreet disc, barely taller than the digits beside it */
   .who-phone .pip{
-    width:clamp(15px,4vw,18px);height:clamp(15px,4vw,18px);
+    width:clamp(14px,3.7vw,17px);height:clamp(14px,3.7vw,17px);
     flex:none;border-radius:50%;background:#e7f5ed;
     display:grid;place-items:center;
   }
@@ -292,27 +303,23 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
   .who-phone a:hover{color:#1f9d55}
 
   .chat{
-    display:flex;align-items:center;justify-content:center;gap:10px;
+    display:flex;align-items:center;justify-content:center;gap:8px;
     margin-top:clamp(26px,7vw,32px);text-decoration:none;
     background:linear-gradient(100deg,#25a75c 0%,#127a42 100%);
     color:#fff;font-weight:700;font-size:clamp(.95rem,2.8vw,1rem);
-    line-height:1;padding:10px 22px;border-radius:999px;
+    line-height:1;padding:9px 22px;border-radius:999px;
     box-shadow:0 6px 18px rgba(18,122,66,.28);
     transition:filter .15s ease,transform .15s ease,box-shadow .15s ease;
   }
   .chat:hover{filter:brightness(1.07);transform:translateY(-1px);box-shadow:0 8px 22px rgba(18,122,66,.34)}
   .chat:active{transform:translateY(0)}
-  /* drawn hollow, as an outline */
-  .chat svg{
-    width:18px;height:18px;flex:none;
-    fill:none;stroke:currentColor;stroke-width:1.6;
-    stroke-linecap:round;stroke-linejoin:round;
-  }
+  /* the mark paints itself: see WHATSAPP_OUTLINE */
+  .chat svg{width:19px;height:19px;flex:none}
   /* a phone cannot hold the details and the button side by side without
      squeezing the name, so below this width the button takes its own line */
   @media (max-width:560px){
     .agent{gap:16px}
-    .chat{width:100%;justify-content:center;padding:10px 20px}
+    .chat{width:100%;justify-content:center;padding:9px 20px}
   }
 
   /* full-size viewer */
@@ -384,7 +391,7 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
              <div class="who">
                <div class="face">${escapeHtml(initials(agentName, agentPhone))}${
                  avatar ? `<img src="${escapeHtml(avatar)}" alt="" onerror="this.remove()">` : ''
-               }</div>
+               }<svg class="badge" viewBox="-2 -2 28 28" aria-hidden="true"><path class="disc" d="${SEAL_GLYPH}"/><path class="tick" d="${TICK_GLYPH}"/></svg></div>
                <span class="rule" aria-hidden="true"></span>
                <div class="who-text">
                  ${
