@@ -63,21 +63,26 @@ const PHONE_GLYPH =
   'M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 ' +
   '.6-.4 1-1 1C10.7 21 3 13.3 3 3.9c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .7-.2 1l-2.2 2.3z';
 
-// The scalloped "verified" seal beside the name, and the tick that sits on the
-// avatar, both as drawn in the reference design.
+// The reference uses the same scalloped seal twice -- beside the name, and on
+// the avatar -- so one shape serves both. Ten lobes, each a quadratic bulging
+// past the outer radius so its apex lands there: that rounds the bumps and
+// leaves the notches crisp. Built the other way round, the bumps come out as
+// spikes.
 const SEAL_GLYPH =
-  'M12 .6Q14.43 2.92 17.7 2.13Q18.65 5.35 21.87 6.3Q21.08 9.57 23.4 12Q21.08 14.43 21.87 ' +
-  '17.7Q18.65 18.65 17.7 21.87Q14.43 21.08 12 23.4Q9.57 21.08 6.3 21.87Q5.35 18.65 2.13 ' +
-  '17.7Q2.92 14.43 .6 12Q2.92 9.57 2.13 6.3Q5.35 5.35 6.3 2.13Q9.57 2.92 12 .6Z';
+  'M9.06 2.96Q12 -2.56 14.94 2.96Q20.56 .22 19.69 6.42Q25.85 7.5 21.5 12Q25.85 16.5 19.69 ' +
+  '17.58Q20.56 23.78 14.94 21.04Q12 26.56 9.06 21.04Q3.44 23.78 4.31 17.58Q-1.85 16.5 2.5 ' +
+  '12Q-1.85 7.5 4.31 6.42Q3.44 .22 9.06 2.96Z';
 
-const TICK_GLYPH = 'M10.4 16.6 6.6 12.8l1.5-1.5 2.3 2.3 5.5-5.5 1.5 1.5z';
+const TICK_GLYPH = 'M10.5 16.9 6.4 12.8l1.7-1.7 2.4 2.4 5.4-5.4 1.7 1.7z';
 
-// The button's mark is a hollow outline in the reference rather than a solid
-// glyph: the bubble is stroked, and the handset inside it is stroked too.
+// The mark in the reference is hollow: the bubble is a ring with its tail at the
+// lower left, and the handset inside it is solid. Fill and stroke are set per
+// path here rather than on the <svg>, so the two differ.
 const WHATSAPP_OUTLINE =
-  '<path d="M12.4 21.3a9 9 0 1 0-7.7-4.4l-1.5 4.7 4.9-1.4a9 9 0 0 0 4.3 1.1z"/>' +
-  '<path d="M9.1 9c.2-.4.5-.5.8-.5h.5l1 2.2-.9 1c.5 1.1 1.6 2.2 2.7 2.7l1-.9 2.2 ' +
-  '1v.5c0 .3 0 .6-.5.8-.6.3-1.5.2-2.5-.2a9.5 9.5 0 0 1-4.4-4.4c-.4-1-.5-1.9-.2-2.5z"/>';
+  '<path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" ' +
+  'd="M12 2.9a9.1 9.1 0 0 1 0 18.2 9.1 9.1 0 0 1-4.6-1.24L2.9 21.1l1.14-4.4A9.1 9.1 0 0 1 12 2.9Z"/>' +
+  '<path fill="currentColor" d="M9.3 8.2c.3-.3.8-.3 1 .1l.9 1.6c.12.2.08.44-.1.6l-.6.5c.5.9 ' +
+  '1.2 1.6 2.1 2.1l.5-.6c.16-.18.4-.22.6-.1l1.6.9c.4.22.4.7.1 1-.4.4-1 .6-1.6.5-2.4-.5-4.6-2.7-5.1-5.1-.1-.6.1-1.2.6-1.6Z"/>';
 
 export function renderPresentation(presentation, { baseUrl }) {
   const text = presentation.text || '';
@@ -218,17 +223,21 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
     content:"";position:absolute;inset-block-start:0;inset-inline-end:0;z-index:0;
     width:clamp(75px,23%,112px);height:clamp(31px,9.5%,44px);pointer-events:none;
     background-image:radial-gradient(#1f9d55 1.1px, transparent 1.1px);
-    background-size:7.5px 7.5px;opacity:.3;
+    background-size:7.5px 7.5px;opacity:.38;
+    -webkit-mask-image:linear-gradient(to bottom left,#000 25%,transparent);
+    mask-image:linear-gradient(to bottom left,#000 25%,transparent);
   }
-  /* The arcs are struck from a centre well outside the card, so what crosses it
-     are gentle near-vertical sweeps rather than tight concentric rings. */
+  /* The arcs bow the other way from a first reading of them: in the reference
+     they sit furthest left at mid-height, so the centre they are struck from is
+     off to the RIGHT, not the left. Placing it at 330% of this band's own width
+     keeps the centre off-card and gives the curvature the reference shows. */
   .contact::before{
     content:"";position:absolute;inset-block:0;inset-inline-start:0;z-index:0;
-    width:24%;pointer-events:none;opacity:.45;
-    background:repeating-radial-gradient(circle at -170px 50%,
-      transparent 0 18px,#e9e7e1 18px 19px);
-    -webkit-mask-image:linear-gradient(to right,#000 30%,transparent);
-    mask-image:linear-gradient(to right,#000 30%,transparent);
+    width:26%;pointer-events:none;opacity:.55;
+    background:repeating-radial-gradient(circle at 330% 50%,
+      transparent 0 16px,#e7e5df 16px 17px);
+    -webkit-mask-image:linear-gradient(to right,#000 15%,transparent);
+    mask-image:linear-gradient(to right,#000 15%,transparent);
   }
   .who,.chat{position:relative;z-index:1}
 
@@ -253,14 +262,15 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
   .face img{
     position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;
   }
-  /* the tick the reference puts on the avatar */
-  .face::after{
-    content:"";position:absolute;inset-block-end:-1px;inset-inline-end:-1px;
-    width:clamp(18px,4.8vw,21px);height:clamp(18px,4.8vw,21px);
-    border-radius:50%;background:#1f9d55;border:2.5px solid #fff;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff'%3E%3Cpath d='M10.4 16.6 6.6 12.8l1.5-1.5 2.3 2.3 5.5-5.5 1.5 1.5z'/%3E%3C/svg%3E");
-    background-size:76% 76%;background-position:center;background-repeat:no-repeat;
+  /* The avatar's badge is the same rosette as the name's, not a plain disc. The
+     white ring is the seal's own stroke painted under its fill, so the ring
+     follows the scallops instead of cutting them off in a circle. */
+  .face .badge{
+    position:absolute;inset-block-end:-2px;inset-inline-end:-2px;
+    width:clamp(19px,5vw,22px);height:clamp(19px,5vw,22px);
   }
+  .face .badge .disc{fill:#1f9d55;stroke:#fff;stroke-width:3;paint-order:stroke}
+  .face .badge .tick{fill:#fff}
 
   .who-text{min-width:0;flex:1}
   /* the name leads: the reference sets it at roughly twice the number's size.
@@ -302,12 +312,8 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
   }
   .chat:hover{filter:brightness(1.07);transform:translateY(-1px);box-shadow:0 8px 22px rgba(18,122,66,.34)}
   .chat:active{transform:translateY(0)}
-  /* drawn hollow, as an outline */
-  .chat svg{
-    width:19px;height:19px;flex:none;
-    fill:none;stroke:currentColor;stroke-width:1.6;
-    stroke-linecap:round;stroke-linejoin:round;
-  }
+  /* the mark paints itself: see WHATSAPP_OUTLINE */
+  .chat svg{width:19px;height:19px;flex:none}
   /* a phone cannot hold the details and the button side by side without
      squeezing the name, so below this width the button takes its own line */
   @media (max-width:560px){
@@ -384,7 +390,7 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
              <div class="who">
                <div class="face">${escapeHtml(initials(agentName, agentPhone))}${
                  avatar ? `<img src="${escapeHtml(avatar)}" alt="" onerror="this.remove()">` : ''
-               }</div>
+               }<svg class="badge" viewBox="-2 -2 28 28" aria-hidden="true"><path class="disc" d="${SEAL_GLYPH}"/><path class="tick" d="${TICK_GLYPH}"/></svg></div>
                <span class="rule" aria-hidden="true"></span>
                <div class="who-text">
                  ${
