@@ -63,11 +63,9 @@ const PHONE_GLYPH =
   'M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 ' +
   '.6-.4 1-1 1C10.7 21 3 13.3 3 3.9c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .7-.2 1l-2.2 2.3z';
 
-// The reference uses the same scalloped seal twice -- beside the name, and on
-// the avatar -- so one shape serves both. Ten lobes, each a quadratic bulging
-// past the outer radius so its apex lands there: that rounds the bumps and
-// leaves the notches crisp. Built the other way round, the bumps come out as
-// spikes.
+// The scalloped seal beside the name. Ten lobes, each a quadratic bulging past
+// the outer radius so its apex lands there: that rounds the bumps and leaves
+// the notches crisp. Built the other way round, the bumps come out as spikes.
 const SEAL_GLYPH =
   'M9.06 2.96Q12 -2.56 14.94 2.96Q20.56 .22 19.69 6.42Q25.85 7.5 21.5 12Q25.85 16.5 19.69 ' +
   '17.58Q20.56 23.78 14.94 21.04Q12 26.56 9.06 21.04Q3.44 23.78 4.31 17.58Q-1.85 16.5 2.5 ' +
@@ -263,16 +261,6 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
   .face img{
     position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;
   }
-  /* The avatar's badge is the same rosette as the name's, not a plain disc. The
-     white ring is the seal's own stroke painted under its fill, so the ring
-     follows the scallops instead of cutting them off in a circle. */
-  .face .badge{
-    position:absolute;inset-block-end:-2px;inset-inline-end:-2px;
-    width:clamp(19px,5vw,22px);height:clamp(19px,5vw,22px);
-  }
-  .face .badge .disc{fill:#1f9d55;stroke:#fff;stroke-width:3;paint-order:stroke}
-  .face .badge .tick{fill:#fff}
-
   .who-text{min-width:0;flex:1}
   /* the name leads: the reference sets it at roughly twice the number's size.
      The seal sits in the text flow rather than beside the paragraph, so a name
@@ -391,7 +379,7 @@ ${ogImage ? `<meta property="og:image" content="${escapeHtml(ogImage)}">` : ''}
              <div class="who">
                <div class="face">${escapeHtml(initials(agentName, agentPhone))}${
                  avatar ? `<img src="${escapeHtml(avatar)}" alt="" onerror="this.remove()">` : ''
-               }<svg class="badge" viewBox="-2 -2 28 28" aria-hidden="true"><path class="disc" d="${SEAL_GLYPH}"/><path class="tick" d="${TICK_GLYPH}"/></svg></div>
+               }</div>
                <span class="rule" aria-hidden="true"></span>
                <div class="who-text">
                  ${
